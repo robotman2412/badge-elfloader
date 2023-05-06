@@ -1,0 +1,3 @@
+[submodule "elfloader"]
+	path = elfloader
+	url = https://robotman2412@github.com/robotman2412/elfloader
