@@ -33,9 +33,9 @@
 extern "C" {
 #endif
 
-// Go from path straight to running a program.
+// Load and run a program in a new task.
 bool badgert_start(const char *path);
-// Go from file descriptor straight to running a program.
+// Load and run a program in a new task.
 // File descriptor is closed when finished.
 bool badgert_start_fd(const char *filename, FILE *fd);
 

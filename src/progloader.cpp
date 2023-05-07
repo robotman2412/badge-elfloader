@@ -36,8 +36,15 @@ static const char *TAG = "badgeloader";
 namespace loader {
 
 
-Linkage::Linkage():
+Linkage::Linkage(int _pid):
 	entryFunc(nullptr),
+	pid(_pid),
+	hasExecutable(0),
+	linkAttempted(0),
+	linkSuccessful(0) {}
+Linkage::Linkage(const abi::Context &actx):
+	entryFunc(nullptr),
+	pid(actx.getPID()),
 	hasExecutable(0),
 	linkAttempted(0),
 	linkSuccessful(0) {}
@@ -54,6 +61,11 @@ void Linkage::garbageCollect() {
 // Returns success status.
 bool Linkage::loadLibrary(const std::string &filename, FILE *fd) {
 	if (linkAttempted) { return false; }
+	auto actx = abi::getContext(pid);
+	if (!actx) {
+		ESP_LOGE(TAG, "Cannot load without valid ABI context");
+		return false;
+	}
 	
 	// Create reading context.
 	auto elf = elf::ELFFile(fd);
@@ -64,10 +76,9 @@ bool Linkage::loadLibrary(const std::string &filename, FILE *fd) {
 	}
 	
 	// Try to load progbits.
-	auto prog = elf.load([](size_t vaddr, size_t len, size_t align) {
-		size_t mem  = (size_t) malloc(len + align);
-		size_t addr = mem + align - mem % align;
-		return std::pair(addr, mem);
+	auto prog = elf.load([&](size_t vaddr, size_t len, size_t align) {
+		size_t mem = actx->map(len, 1, 1, align);
+		return std::pair(mem, mem);
 	});
 	if (!prog) return false;
 	

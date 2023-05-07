@@ -177,6 +177,7 @@ static void taskCode(void *context) {
 	#endif
 	
 	// Free resources and exit.
+	abi::deleteContext(actx);
 	delete params;
 	vTaskDelete(NULL);
 }
@@ -190,6 +191,7 @@ bool startPreloaded(loader::Linkage &&linkage, abi::Context &ctx, Callback cb) {
 	// Assert context is ready to run.
 	if (!ptr->prog.isProgReady()) {
 		ESP_LOGE(TAG, "Cannot start process %d: Program not ready for execution", ctx.getPID());
+		abi::deleteContext(ctx);
 		delete ptr;
 		return false;
 	}
@@ -205,6 +207,7 @@ bool startPreloaded(loader::Linkage &&linkage, abi::Context &ctx, Callback cb) {
 		return true;
 	} else {
 		ESP_LOGE(TAG, "Cannot start process %d: Task creation failed", ctx.getPID());
+		abi::deleteContext(ctx);
 		delete ptr;
 		return false;
 	}
@@ -281,10 +284,12 @@ bool startFD(const std::string &filename, FILE *fd) {
 	int res;
 	
 	// Load program into memory.
-	loader::Linkage prog;
+	auto &actx = abi::newContext();
+	loader::Linkage prog {actx};
 	res = prog.loadExecutable(filename, fd);
 	if (!res) {
-		ESP_LOGE(TAG, "Fail to load %s", filename.c_str());
+		ESP_LOGE(TAG, "Failed to load %s", filename.c_str());
+		abi::deleteContext(actx);
 		return false;
 	}
 	
@@ -308,6 +313,7 @@ bool startFD(const std::string &filename, FILE *fd) {
 			auto fd = loadLibrary(prog, lib);
 			if (!fd) {
 				ESP_LOGE(TAG, "Failed to load %s", lib.c_str());
+				abi::deleteContext(actx);
 				return false;
 			} else {
 				if (fd != (FILE *) -1) fds.emplace_back(fd);
@@ -322,11 +328,11 @@ bool startFD(const std::string &filename, FILE *fd) {
 	res = prog.link();
 	if (!res) {
 		ESP_LOGE(TAG, "Failed to load %s: Dynamic linking error", filename.c_str());
+		abi::deleteContext(actx);
 		return false;
 	}
 	
 	// Start the process.
-	auto &actx = abi::newContext();
 	return startPreloaded(std::move(prog), actx);
 }
 
@@ -363,7 +369,17 @@ void removeSearchDir(const std::string &path) {
 
 
 
-// Go from file descriptor straight to running a program.
+// Load and run a program in a new task.
+extern "C" bool badgert_start(const char *path) {
+	// Find filename from path.
+	const char *ptr = std::max(strrchr(path, '/'), strrchr(path, '\\'));
+	const char *filename = ptr ? ptr+1 : path;
+	
+	// Forward the rest.
+	return startFD(filename, fopen(path, "rb"));
+}
+
+// Load and run a program in a new task.
 // File descriptor is closed when finished.
 extern "C" bool badgert_start_fd(const char *filename, FILE *fd) {
 	return startFD(filename, fd);

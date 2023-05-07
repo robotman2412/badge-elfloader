@@ -26,8 +26,11 @@
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+
 #include <esp_timer.h>
 #include <esp_system.h>
+#include <esp_log.h>
+static const char *TAG = "badgeabi";
 
 #include <malloc.h>
 #include <stdio.h>
@@ -94,9 +97,12 @@ bool deleteContext(int pid) {
 
 
 
-Context::Context() {}
+Context::Context() {
+	ESP_LOGD(TAG, "Context()");
+}
 
 Context::~Context() {
+	ESP_LOGD(TAG, "~Context()");
 	for (auto mem: actual) {
 		free((void *) mem.base);
 	}

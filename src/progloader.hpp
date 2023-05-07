@@ -26,6 +26,7 @@
 
 #include <elfloader.hpp>
 #include <relocation.hpp>
+#include <abi.hpp>
 
 #include <vector>
 #include <string>
@@ -45,6 +46,8 @@ struct Linkage {
 		std::vector<elf::ELFFile> files;
 		// Entry function if applicable.
 		void *entryFunc = nullptr;
+		// PID of process being constructed.
+		int pid;
 		
 		// Whether the executable has been loaded.
 		bool hasExecutable;
@@ -54,7 +57,8 @@ struct Linkage {
 		bool linkSuccessful;
 		
 	public:
-		Linkage();
+		explicit Linkage(int pid);
+		explicit Linkage(const abi::Context &);
 		Linkage(Linkage &&) = default;
 		~Linkage();
 		
