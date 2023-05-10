@@ -32,6 +32,10 @@
 #include <kernel.hpp>
 #endif
 
+#include <abi/gpio.hpp>
+#include <abi/libc.hpp>
+#include <abi/system.hpp>
+
 #include <vector>
 #include <unordered_map>
 

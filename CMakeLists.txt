@@ -2,6 +2,9 @@
 idf_component_register(
 	SRCS
 		"src/abi.cpp"
+		"src/abi/gpio.cpp"
+		"src/abi/libc.cpp"
+		"src/abi/system.cpp"
 		"src/runner.cpp"
 		"src/runner.S"
 		"src/progloader.cpp"
@@ -11,6 +14,7 @@ idf_component_register(
 		"kernel/src"
 	REQUIRES
 		"esp_timer"
+		"driver"
 )
 
 add_subdirectory(elfloader)
