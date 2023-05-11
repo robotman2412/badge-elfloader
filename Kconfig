@@ -11,17 +11,4 @@ menu "Badge native apps"
 		bool "Enable memory protection unit"
 		default y
 	
-	config BADGEABI_OVERRIDE_MALLOC
-		depends on !BADGEABI_ENABLE_KERNEL
-		bool "Use custom malloc for apps"
-		default y
-		help
-			Instead of forwarding malloc-like functions, use a custom implementation that resource memory leaks to within each app.
-	
-	config BADGEABI_OVERRIDE_STDIO
-		bool "Use custom stdio for apps"
-		default y
-		help
-			Instead of forwarding stdio functions, use a custom implementation that resource memory leaks to within each app.
-	
 endmenu

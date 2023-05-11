@@ -24,50 +24,62 @@
 
 #include "system.hpp"
 
+#include <abi.hpp>
+
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
 #include <esp_timer.h>
 
+// Yield to scheduler.
+static void abi_yield() {
+#ifdef CONFIG_BADGEABI_ENABLE_KERNEL
+	kernel::ctx_t *ctx = kernel::getCtx();
+	vPortYield();
+	if (ctx) kernel::setCtx(ctx);
+#else
+	vPortYield();
+#endif
+}
+
+// Delay in milliseconds.
+static void abi_delay_ms(int64_t millis) {
+	if (millis <= 0) return;
+#ifdef CONFIG_BADGEABI_ENABLE_KERNEL
+	kernel::ctx_t *ctx = kernel::getCtx();
+	vTaskDelay(pdMS_TO_TICKS(millis));
+	if (ctx) kernel::setCtx(ctx);
+#else
+	vTaskDelay(pdMS_TO_TICKS(millis));
+#endif
+}
+
+// Delay in microseconds.
+static void abi_delay_us(int64_t micros) {
+	if (micros <= 0) return;
+	esp_rom_delay_us(micros);
+}
+
+// Map in new memory.
+static void *abi_mem_map(size_t len, size_t min_align, bool allow_exec) {
+	auto ctx = abi::getContext();
+	return (void *) ctx->map(len, 1, allow_exec, min_align);
+}
+
+// Unmap memory.
+static void abi_mem_unmap(void *addr) {
+	auto ctx = abi::getContext();
+	ctx->unmap((size_t) addr);
+}
+
 // Exports ABI symbols into `map` (no wrapper).
 void abi::system::exportSymbolsUnwrapped(elf::SymMap &map) {
 	// From system.h:
-	map["yield"]    = (size_t) +[]{
-		#ifdef CONFIG_BADGEABI_ENABLE_KERNEL
-			kernel::ctx_t *ctx = kernel::getCtx();
-			vPortYield();
-			if (ctx) kernel::setCtx(ctx);
-		#else
-			vPortYield();
-		#endif
-	};
-	map["delay_ms"] = (size_t) +[](int64_t millis){
-		#ifdef CONFIG_BADGEABI_ENABLE_KERNEL
-			kernel::ctx_t *ctx = kernel::getCtx();
-			vTaskDelay(pdMS_TO_TICKS(millis));
-			if (ctx) kernel::setCtx(ctx);
-		#else
-			vTaskDelay(pdMS_TO_TICKS(millis));
-		#endif
-	};
-	map["delay_us"] = (size_t) +[](int64_t micros){
-		#ifdef CONFIG_BADGEABI_ENABLE_KERNEL
-			kernel::ctx_t *ctx = kernel::getCtx();
-		#endif
-		int64_t millis = micros / 1000;
-		if (millis >= 4) {
-			micros -= millis * 1000;
-			int64_t t1 = esp_timer_get_time();
-			vTaskDelay(pdMS_TO_TICKS(millis));
-			int64_t t2 = esp_timer_get_time();
-			int64_t took_us = t2 - t1;
-			micros -= took_us;
-		}
-		esp_rom_delay_us(micros);
-		#ifdef CONFIG_BADGEABI_ENABLE_KERNEL
-			if (ctx) kernel::setCtx(ctx);
-		#endif
-	};
-	map["sched_yield"] = map["yield"];
-	map["usleep"]      = map["delay_us"];
+	map["yield"]       = (size_t) &abi_yield;
+	map["delay_ms"]    = (size_t) &abi_delay_ms;
+	map["delay_us"]    = (size_t) &abi_delay_us;
+	map["sched_yield"] = (size_t) &abi_yield;
+	map["usleep"]      = (size_t) &abi_delay_us;
+	map["__mem_map"]   = (size_t) &abi_mem_map;
+	map["__mem_unmap"] = (size_t) &abi_mem_unmap;
 }

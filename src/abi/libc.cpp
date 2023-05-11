@@ -29,6 +29,8 @@
 
 #include <abi.hpp>
 
+
+
 // Called when an app aborts.
 static void appAborted() {
 	printf("App aborted!\n");
@@ -54,16 +56,17 @@ static void appExited(int ec) {
 	);
 }
 
+
 // Exports ABI symbols into `map` (no wrapper).
 void abi::libc::exportSymbolsUnwrapped(elf::SymMap &map) {
 	// No header file:
 	map["_exit"] = (size_t) &appExited;
 	
 	// From malloc.h:
-	map["malloc"]  = (size_t) &malloc;
-	map["free"]    = (size_t) &free;
-	map["calloc"]  = (size_t) &calloc;
-	map["realloc"] = (size_t) &realloc;
+	// map["malloc"]  = (size_t) &malloc;
+	// map["free"]    = (size_t) &free;
+	// map["calloc"]  = (size_t) &calloc;
+	// map["realloc"] = (size_t) &realloc;
 	
 	// From stdio.h:
 	map["__get_stdin"]  = (size_t) +[]{ return stdin; };
