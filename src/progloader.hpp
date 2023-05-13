@@ -34,7 +34,7 @@
 namespace loader {
 
 // Represents a single program's execution environment.
-struct Linkage {
+class Linkage {
 	protected:
 		// Map of all loaded symbols.
 		elf::SymMap symbols;

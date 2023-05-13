@@ -48,10 +48,33 @@ struct FILEPTR_DELETE {
 };
 using FILEPTR = std::unique_ptr<FILE, FILEPTR_DELETE>;
 
+// Represents a program's dynamic linking information.
+struct Dynamic {
+	// Pointer to dynamic table of a file.
+	const elf::DynEntry *dynamic;
+	// Amount of dynamic table entries excluding null terminator.
+	size_t numDynamic;
+	// Dependency list.
+	std::vector<std::string> needed;
+	// Pointer to init function of a file, if any.
+	const void *initFunc;
+	// Pointer to exit function of a file, if any.
+	const void *finiFunc;
+};
+
+// List of dynamic linking information.
+// Will be sorted such that forward iteration is the correct FINI order.
+using DynList = std::vector<Dynamic>;
+
 // Simple struct used to pass parameters to THE APP.
 struct Params {
+	// Loaded program to run.
 	loader::Linkage  prog;
+	// ABI context to run it in.
 	abi::Context    &actx;
+	// Dynamic linking information.
+	// DynList          dyn;
+	// On exit callback.
 	Callback         cb;
 };
 
@@ -75,6 +98,7 @@ static std::map<std::string, Registered> registered;
 
 // Dynamic library search path.
 static std::vector<std::string> searchPath;
+
 
 
 #ifdef CONFIG_BADGEABI_ENABLE_KERNEL
@@ -183,7 +207,7 @@ static void taskCode(void *context) {
 }
 
 // Take a pre-loaded linkage and start it under a new thread.
-bool startPreloaded(loader::Linkage &&linkage, abi::Context &ctx, Callback cb) {
+static bool startPreloaded(loader::Linkage &&linkage, abi::Context &ctx, Callback cb) {
 	// This pointer will be managed by the task from now on.
 	auto ptr = new Params { std::move(linkage), ctx, std::move(cb) };
 	TaskHandle_t handle;
@@ -276,9 +300,15 @@ static FILE *loadLibrary(loader::Linkage &prog, const std::string &name) {
 	return nullptr;
 }
 
+// Parse dynamic information from a loaded segment.
+static bool parseDynamic(Dynamic &out, const elf::Program &loaded, const elf::ELFFile &file) {
+	// TODO.
+	return false;
+}
+
 // Go from file descriptor straight to running a program.
 // File descriptor is closed when finished.
-bool startFD(const std::string &filename, FILE *fd) {
+bool startFD(const std::string &filename, FILE *fd, Callback cb) {
 	std::vector<FILEPTR> fds;
 	fds.emplace_back(fd);
 	int res;
@@ -333,7 +363,7 @@ bool startFD(const std::string &filename, FILE *fd) {
 	}
 	
 	// Start the process.
-	return startPreloaded(std::move(prog), actx);
+	return startPreloaded(std::move(prog), actx, std::move(cb));
 }
 
 

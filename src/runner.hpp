@@ -42,12 +42,9 @@ enum setting {
 // Function to call when process exits.
 using Callback = std::function<void(int exitCode, abi::Context &ctx)>;
 
-// Take a pre-loaded linkage and start it under a new thread.
-bool startPreloaded(loader::Linkage &&linkage, abi::Context &ctx, Callback cb={});
-
 // Go from file descriptor straight to running a program.
 // File descriptor is closed when finished.
-bool startFD(const std::string &filename, FILE *fd);
+bool startFD(const std::string &filename, FILE *fd, Callback cb={});
 
 // Register a dynamic library from a buffer.
 // The buffer must exist until a matching `badgert_unregister` call is made.
