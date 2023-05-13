@@ -5,6 +5,7 @@ idf_component_register(
 		"src/abi/gpio.cpp"
 		"src/abi/libc.cpp"
 		"src/abi/system.cpp"
+		"src/abi/math.cpp"
 		"src/runner.cpp"
 		"src/runner.S"
 		"src/progloader.cpp"
