@@ -326,6 +326,9 @@ void exportSymbolsUnwrapped(elf::SymMap &map) {
 	gpio::exportSymbolsUnwrapped(map);
 	libc::exportSymbolsUnwrapped(map);
 	system::exportSymbolsUnwrapped(map);
+	math::exportSymbolsUnwrapped(map);
+	softfloat::exportSymbolsUnwrapped(map);
+	display::exportSymbolsUnwrapped(map);
 }
 
 

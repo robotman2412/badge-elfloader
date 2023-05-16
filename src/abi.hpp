@@ -35,6 +35,9 @@
 #include <abi/gpio.hpp>
 #include <abi/libc.hpp>
 #include <abi/system.hpp>
+#include <abi/math.hpp>
+#include <abi/softfloat.hpp>
+#include <abi/display.hpp>
 
 #include <vector>
 #include <unordered_map>

@@ -107,8 +107,8 @@ int runUserCode(bool &success, kernel::ctx_t &kctx, loader::Linkage &prog, abi::
 	memset(&kctx.u_regs, 0, sizeof(kctx.u_regs));
 	
 	// Allocate user stack.
-	kctx.u_regs.sp = actx.map(setting::STACK_ENTRIES * sizeof(long));
-	kctx.u_regs.sp += setting::STACK_ENTRIES * sizeof(long);
+	kctx.u_regs.sp = actx.map(CONFIG_BADGERT_STACK_DEPTH * sizeof(long));
+	kctx.u_regs.sp += CONFIG_BADGERT_STACK_DEPTH * sizeof(long);
 	if (!kctx.u_regs.sp) {
 		success = false;
 		return -1;
@@ -224,7 +224,7 @@ static bool startPreloaded(loader::Linkage &&linkage, abi::Context &ctx, Callbac
 	#ifdef CONFIG_BADGEABI_ENABLE_KERNEL
 	auto res = xTaskCreate(taskCode, "", 2048, ptr, 0, &handle);
 	#else
-	auto res = xTaskCreate(taskCode, "", setting::STACK_ENTRIES, ptr, 0, &handle);
+	auto res = xTaskCreate(taskCode, "", CONFIG_BADGERT_STACK_DEPTH, ptr, 0, &handle);
 	#endif
 	
 	if (res == pdPASS) {
@@ -330,6 +330,9 @@ bool startFD(const std::string &filename, FILE *fd, Callback cb) {
 	}
 	libs.emplace("libc.so");
 	libs.emplace("libbadge.so");
+	libs.emplace("libm.so");
+	libs.emplace("libfloat.so");
+	libs.emplace("libdisplay.so");
 	
 	// Load libraries.
 	load_my_lib:

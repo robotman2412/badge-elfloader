@@ -11,4 +11,8 @@ menu "Badge native apps"
 		bool "Enable memory protection unit"
 		default y
 	
+	config BADGERT_STACK_DEPTH
+		int "Number of stack entries"
+		default 4096
+	
 endmenu

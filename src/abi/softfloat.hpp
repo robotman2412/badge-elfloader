@@ -24,35 +24,11 @@
 
 #pragma once
 
-#include <progloader.hpp>
-#ifdef CONFIG_BADGEABI_ENABLE_KERNEL
-#include <kernel.hpp>
-#endif
-#include <abi.hpp>
+#include <elfloader.hpp>
 
-#include <functional>
-#include <string>
+namespace abi::softfloat {
 
-namespace runtime {
-
-// Function to call when process exits.
-using Callback = std::function<void(int exitCode, abi::Context &ctx)>;
-
-// Go from file descriptor straight to running a program.
-// File descriptor is closed when finished.
-bool startFD(const std::string &filename, FILE *fd, Callback cb={});
-
-// Register a dynamic library from a buffer.
-// The buffer must exist until a matching `badgert_unregister` call is made.
-void registerBuf(const std::string &filename, const void *buf, size_t buf_len);
-// Register a dynamic library from a path.
-void registerFile(const std::string &filename, const std::string &fullpath);
-// Unregister a dynamic library.
-void unregister(const std::string &filename);
-
-// Add a dynamic library search directory.
-void addSearchDir(const std::string &path);
-// Remove a dynamic library search directory.
-void removeSearchDir(const std::string &path);
+// Exports ABI symbols into `map` (no wrapper).
+void exportSymbolsUnwrapped(elf::SymMap &map);
 
 }

@@ -23,7 +23,7 @@
 */
 
 #include "gpio.hpp"
-#include "abi_gpio.h"
+#include "badgesdk/include/gpio.h"
 
 #include <driver/gpio.h>
 #include <driver/i2c.h>
@@ -36,12 +36,12 @@
 		IO_CAP_HIGH_Z		|\
 		IO_CAP_INPUT		|\
 		IO_CAP_OUTPUT		|\
-		IO_CAP_UART_RX	|\
+		IO_CAP_UART_RX		|\
 		IO_CAP_I2C_CLOCK	|\
-		IO_CAP_I2C_DATA	|\
-		IO_CAP_PWM_OUT	|\
+		IO_CAP_I2C_DATA		|\
+		IO_CAP_PWM_OUT		|\
 		IO_CAP_SPI_CLOCK	|\
-		IO_CAP_SPI_SEND	|\
+		IO_CAP_SPI_SEND		|\
 		IO_CAP_SPI_RECV
 
 static uint32_t io_pin_cap_arr[] = {
@@ -138,7 +138,7 @@ void io_write(int pin, bool value) {
 
 // Set mode of pin.
 // Returns whether the operation was successful.
-bool io_mode(int pin, io_mode_t mode) {
+bool io_set_mode(int pin, io_mode_t mode) {
 	switch (mode) {
 		default: return false;
 			
@@ -154,7 +154,7 @@ bool io_mode(int pin, io_mode_t mode) {
 // Set pull direction of an input pin.
 // If not set to IO_MODE_INPUT, the resulting value is UNSPECIFIED.
 // Returns whether the operation was successful.
-bool io_pull(int pin, io_pull_t dir) {
+bool io_set_pull(int pin, io_pull_t dir) {
 	switch (dir) {
 		default: return false;
 			
@@ -196,8 +196,23 @@ bool io_detach_isr(int pin) {
 
 // Set up an I2C interface as I2C host.
 // Returns whether the operation was successful.
-bool i2c_host_init(int interface, int sda, int scl){
-	return false; // TODO.
+bool i2c_host_init(int interface, int sda, int scl) {
+	// Set I2C parameters.
+	i2c_config_t config = {
+		.mode = I2C_MODE_MASTER,
+		.sda_io_num = (gpio_num_t) sda,
+		.scl_io_num = (gpio_num_t) scl,
+		.sda_pullup_en = true,
+		.scl_pullup_en = true,
+		.master = { .clk_speed = 100000 },
+		.clk_flags = 0,
+	};
+	auto res = i2c_param_config((i2c_port_t) interface, &config);
+	if (res) return false;
+	
+	// Install I2C driver.
+	res = i2c_driver_install((i2c_port_t) interface, I2C_MODE_MASTER, 0, 0, 0);
+	return res == 0;
 }
 
 // Start an I2C transaction (I2C host only).
@@ -324,8 +339,8 @@ void abi::gpio::exportSymbolsUnwrapped(elf::SymMap &map) {
 	map["io_cap_i2c_speed"]		= (size_t) &io_cap_i2c_speed;
 	map["io_read"]				= (size_t) &io_read;
 	map["io_write"]				= (size_t) &io_write;
-	map["io_mode"]				= (size_t) &io_mode;
-	map["io_pull"]				= (size_t) &io_pull;
+	map["io_set_mode"]			= (size_t) &io_set_mode;
+	map["io_set_pull"]			= (size_t) &io_set_pull;
 	map["io_attach_isr"]		= (size_t) &io_attach_isr;
 	map["io_attach_isr_cookie"]	= (size_t) &io_attach_isr_cookie;
 	map["io_detach_isr"]		= (size_t) &io_detach_isr;
