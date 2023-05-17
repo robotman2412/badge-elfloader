@@ -108,7 +108,7 @@ Context::~Context() {
 	}
 }
 
-// Merge touching entries of available ranges.
+/* // Merge touching entries of available ranges.
 void Context::mergeAvailable() {
 	// Sort available ranges by base address.
 	// std::sort(available.begin(), available.end(), [](MemRange a, MemRange b) {
@@ -129,9 +129,9 @@ void Context::mergeAvailable() {
 			i++;
 		}
 	}
-}
+} */
 
-// Insert a range into available such that available remains sorted.
+/* // Insert a range into available such that available remains sorted.
 void Context::insertAvailable(MemMapped add) {
 	#if 0
 	// Binary search the position to insert in to.
@@ -159,7 +159,7 @@ void Context::insertAvailable(MemMapped add) {
 	// Final insertion.
 	available.insert(available.begin() + i, add);
 	#endif
-}
+} */
 
 // Map a new range of a minimum size.
 // Returns pointer on success, 0 otherwise.
@@ -201,18 +201,8 @@ size_t Context::map(size_t min_length, bool allow_write, bool allow_exec, size_t
 	size_t actual_i = actual.size();
 	actual.push_back(mem);
 	
-	// Unused space before.
-	if (base > mem.base) {
-		insertAvailable({{mem.base, base-mem.base}, actual_i});
-	}
-	
 	// Used space.
 	mapped.push_back({{base, min_length}, actual_i});
-	
-	// Unused space after.
-	if (base + min_length < mem.base + mem.length) {
-		insertAvailable({{base + min_length, mem.length-base-min_length}, actual_i});
-	}
 	
 	return base;
 }
@@ -220,7 +210,13 @@ size_t Context::map(size_t min_length, bool allow_write, bool allow_exec, size_t
 // Actual implementation of unmap.
 // Index is into mapped list.
 void Context::unmapIdx(size_t index) {
-	// Move a block from mapped to available.
+	// Free the memory.
+	deallocator(actual[index]);
+	// Remove it from the list.
+	actual.erase(actual.begin() + index);
+	mapped.erase(mapped.begin() + index);
+	
+	/* // Move a block from mapped to available.
 	auto range = mapped[index];
 	mapped.erase(mapped.begin() + index);
 	insertAvailable(range);
@@ -257,7 +253,7 @@ void Context::unmapIdx(size_t index) {
 			// Check next range.
 			i++;
 		}
-	}
+	} */
 }
 
 // Unmap a range of memory.

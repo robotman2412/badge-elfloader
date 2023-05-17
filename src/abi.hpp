@@ -99,8 +99,8 @@ class Context {
 		std::vector<MemRange> actual;
 		// List of dynamically allocated memory ranges.
 		std::vector<MemMapped> mapped;
-		// List of available ranges of memory.
-		std::vector<MemMapped> available;
+		/* // List of available ranges of memory.
+		std::vector<MemMapped> available; */
 		
 		// Process ID.
 		int pid;
