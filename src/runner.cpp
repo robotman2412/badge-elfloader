@@ -331,7 +331,7 @@ bool startFD(const std::string &filename, FILE *fd, Callback cb) {
 	libs.emplace("libc.so");
 	libs.emplace("libbadge.so");
 	libs.emplace("libm.so");
-	libs.emplace("libfloat.so");
+	libs.emplace("libimplicitops.so");
 	libs.emplace("libdisplay.so");
 	
 	// Load libraries.

@@ -96,10 +96,11 @@ bool Linkage::loadLibrary(const std::string &filename, FILE *fd) {
 	#ifdef CONFIG_BADGEABI_ENABLE_MPU
 	// Apply MPU settings.
 	if (!mpu::applyPH(elf, prog)) {
-		std::cout << "Applying MPU settings failed, ignoring.\n";
+		ESP_LOGW(TAG, "Applying MPU settings failed");
 	}
 	#endif
 	
+	ESP_LOGI(TAG, "%s loaded to 0x%08zx (offset 0x%08zx)", filename.c_str(), (size_t) prog.vaddr_real, (size_t) prog.vaddr_offset());
 	return true;
 }
 

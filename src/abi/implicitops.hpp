@@ -26,7 +26,7 @@
 
 #include <elfloader.hpp>
 
-namespace abi::softfloat {
+namespace abi::implicitops {
 
 // Exports ABI symbols into `map` (no wrapper).
 void exportSymbolsUnwrapped(elf::SymMap &map);

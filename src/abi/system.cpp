@@ -78,6 +78,8 @@ void abi::system::exportSymbolsUnwrapped(elf::SymMap &map) {
 	map["yield"]       = (size_t) &abi_yield;
 	map["delay_ms"]    = (size_t) &abi_delay_ms;
 	map["delay_us"]    = (size_t) &abi_delay_us;
+	map["uptime_ms"]   = (size_t) +[]() -> int64_t { return esp_timer_get_time() / 1000; };
+	map["uptime_us"]   = (size_t) &esp_timer_get_time;
 	map["sched_yield"] = (size_t) &abi_yield;
 	map["usleep"]      = (size_t) &abi_delay_us;
 	map["__mem_map"]   = (size_t) &abi_mem_map;

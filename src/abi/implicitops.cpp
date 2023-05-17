@@ -22,68 +22,94 @@
 	SOFTWARE.
 */
 
-#include "softfloat.hpp"
+#include "implicitops.hpp"
 
-extern "C" void __adddf3();
-extern "C" void __addsf3();
-extern "C" void __addtf3();
-extern "C" void __divdf3();
-extern "C" void __divsf3();
-extern "C" void __divtf3();
-extern "C" void __eqdf2();
-extern "C" void __eqsf2();
-extern "C" void __eqtf2();
-extern "C" void __extenddftf2();
-extern "C" void __extendsfdf2();
-extern "C" void __extendsftf2();
-extern "C" void __fixdfdi();
-extern "C" void __fixdfsi();
-extern "C" void __fixsfdi();
-extern "C" void __fixsfsi();
-extern "C" void __fixtfdi();
-extern "C" void __fixtfsi();
-extern "C" void __fixunsdfdi();
-extern "C" void __fixunsdfsi();
-extern "C" void __fixunssfdi();
-extern "C" void __fixunssfsi();
-extern "C" void __fixunstfdi();
-extern "C" void __fixunstfsi();
-extern "C" void __floatdidf();
-extern "C" void __floatdisf();
-extern "C" void __floatditf();
-extern "C" void __floatsidf();
-extern "C" void __floatsisf();
-extern "C" void __floatsitf();
-extern "C" void __floatundidf();
-extern "C" void __floatundisf();
-extern "C" void __floatunditf();
-extern "C" void __floatunsidf();
-extern "C" void __floatunsisf();
-extern "C" void __floatunsitf();
-extern "C" void __gedf2();
-extern "C" void __gesf2();
-extern "C" void __getf2();
-extern "C" void __ledf2();
-extern "C" void __lesf2();
-extern "C" void __letf2();
-extern "C" void __muldf3();
-extern "C" void __mulsf3();
-extern "C" void __multf3();
-extern "C" void __negdf2();
-extern "C" void __negsf2();
-extern "C" void __negtf2();
-extern "C" void __subdf3();
-extern "C" void __subsf3();
-extern "C" void __subtf3();
-extern "C" void __truncdfsf2();
-extern "C" void __trunctfdf2();
-extern "C" void __trunctfsf2();
-extern "C" void __unorddf2();
-extern "C" void __unordsf2();
-extern "C" void __unordtf2();
+extern "C" {
+
+void __adddf3();
+void __addsf3();
+void __addtf3();
+void __divdf3();
+void __divsf3();
+void __divtf3();
+bool __eqdf2(float,float);
+bool __eqsf2(float,float);
+bool __eqtf2(float,float);
+void __extenddftf2();
+void __extendsfdf2();
+void __extendsftf2();
+void __fixdfdi();
+void __fixdfsi();
+void __fixsfdi();
+void __fixsfsi();
+void __fixtfdi();
+void __fixtfsi();
+void __fixunsdfdi();
+void __fixunsdfsi();
+void __fixunssfdi();
+void __fixunssfsi();
+void __fixunstfdi();
+void __fixunstfsi();
+void __floatdidf();
+void __floatdisf();
+void __floatditf();
+void __floatsidf();
+void __floatsisf();
+void __floatsitf();
+void __floatundidf();
+void __floatundisf();
+void __floatunditf();
+void __floatunsidf();
+void __floatunsisf();
+void __floatunsitf();
+bool __gedf2(float,float);
+bool __gesf2(float,float);
+bool __getf2(float,float);
+bool __ledf2(float,float);
+bool __lesf2(float,float);
+bool __letf2(float,float);
+void __muldf3();
+void __mulsf3();
+void __multf3();
+void __negdf2();
+void __negsf2();
+void __negtf2();
+void __subdf3();
+void __subsf3();
+void __subtf3();
+void __truncdfsf2();
+void __trunctfdf2();
+void __trunctfsf2();
+void __unorddf2();
+void __unordsf2();
+void __unordtf2();
+
+bool __ltsf2(float,float);
+bool __ltdf2(float,float);
+bool __lttf2(float,float);
+bool __gtsf2(float,float);
+bool __netf2(float,float);
+bool __nedf2(float,float);
+bool __nesf2(float,float);
+bool __gttf2(float,float);
+bool __gtdf2(float,float);
+
+int __mulsi3(int, int);
+int __divsi3(int, int);
+unsigned int __udivsi3(unsigned int, unsigned int);
+int __modsi3(int, int);
+unsigned int __umodsi3(unsigned int, unsigned int);
+long __muldi3(long, long);
+long __divdi3(long, long);
+unsigned long __udivdi3(unsigned long, unsigned long);
+long __moddi3(long, long);
+unsigned long __umoddi3(unsigned long, unsigned long);
+
+} // extern "C"
 
 // Exports ABI symbols into `map` (no wrapper).
-void abi::softfloat::exportSymbolsUnwrapped(elf::SymMap &map) {
+void abi::implicitops::exportSymbolsUnwrapped(elf::SymMap &map) {
+	// Floating-point.
 	map["__adddf3"] = (size_t) &__adddf3;
 	map["__addsf3"] = (size_t) &__addsf3;
 	map["__addtf3"] = (size_t) &__addtf3;
@@ -142,13 +168,25 @@ void abi::softfloat::exportSymbolsUnwrapped(elf::SymMap &map) {
 	map["__unordsf2"] = (size_t) &__unordsf2;
 	map["__unordtf2"] = (size_t) &__unordtf2;
 	
-	map["__ltsf2"] = (size_t) &__lesf2;
-	map["__ltdf2"] = (size_t) &__ledf2;
-	map["__lttf2"] = (size_t) &__letf2;
-	map["__gtsf2"] = (size_t) &__gesf2;
-	map["__netf2"] = (size_t) &__eqtf2;
-	map["__nedf2"] = (size_t) &__eqdf2;
-	map["__nesf2"] = (size_t) &__eqsf2;
-	map["__gttf2"] = (size_t) &__getf2;
-	map["__gtdf2"] = (size_t) &__gedf2;
+	map["__ltsf2"] = (size_t) &__ltsf2;
+	map["__ltdf2"] = (size_t) &__ltdf2;
+	map["__lttf2"] = (size_t) &__lttf2;
+	map["__gtsf2"] = (size_t) &__gtsf2;
+	map["__netf2"] = (size_t) &__netf2;
+	map["__nedf2"] = (size_t) &__nedf2;
+	map["__nesf2"] = (size_t) &__nesf2;
+	map["__gttf2"] = (size_t) &__gttf2;
+	map["__gtdf2"] = (size_t) &__gtdf2;
+	
+	// Integer.
+	map["__mulsi3"]  = (size_t) &__mulsi3;
+	map["__divsi3"]  = (size_t) &__divsi3;
+	map["__udivsi3"] = (size_t) &__udivsi3;
+	map["__modsi3"]  = (size_t) &__modsi3;
+	map["__umodsi3"] = (size_t) &__umodsi3;
+	map["__muldi3"]  = (size_t) &__muldi3;
+	map["__divdi3"]  = (size_t) &__divdi3;
+	map["__udivdi3"] = (size_t) &__udivdi3;
+	map["__moddi3"]  = (size_t) &__moddi3;
+	map["__umoddi3"] = (size_t) &__umoddi3;
 }

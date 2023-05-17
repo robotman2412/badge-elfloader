@@ -10,7 +10,7 @@ idf_component_register(
 		"src/abi/libc.cpp"
 		"src/abi/system.cpp"
 		"src/abi/math.cpp"
-		"src/abi/softfloat.cpp"
+		"src/abi/implicitops.cpp"
 		"src/abi/display.cpp"
 		"src/runner.cpp"
 		"src/runner.S"

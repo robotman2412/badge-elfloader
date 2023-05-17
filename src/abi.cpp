@@ -211,7 +211,7 @@ size_t Context::map(size_t min_length, bool allow_write, bool allow_exec, size_t
 	
 	// Unused space after.
 	if (base + min_length < mem.base + mem.length) {
-		insertAvailable({{mem.base, mem.length-base-min_length}, actual_i});
+		insertAvailable({{base + min_length, mem.length-base-min_length}, actual_i});
 	}
 	
 	return base;
@@ -281,12 +281,14 @@ bool Context::unmap(size_t base) {
 MemRange allocator(size_t min_length, bool allow_write, bool allow_exec) __attribute__((weak));
 MemRange allocator(size_t min_length, bool allow_write, bool allow_exec) {
 	void *mem = malloc(min_length);
+	ESP_LOGD(TAG, "allocator(%zu, %d, %d) = %p", min_length, allow_write, allow_exec, mem);
 	return { (size_t) mem, min_length };
 }
 
 // An overridable allocator used for Context.
 void deallocator(MemRange range) __attribute__((weak));
 void deallocator(MemRange range) {
+	ESP_LOGD(TAG, "deallocator(%p)", (void*) range.base);
 	free((void *) range.base);
 }
 
@@ -327,7 +329,7 @@ void exportSymbolsUnwrapped(elf::SymMap &map) {
 	libc::exportSymbolsUnwrapped(map);
 	system::exportSymbolsUnwrapped(map);
 	math::exportSymbolsUnwrapped(map);
-	softfloat::exportSymbolsUnwrapped(map);
+	implicitops::exportSymbolsUnwrapped(map);
 	display::exportSymbolsUnwrapped(map);
 }
 

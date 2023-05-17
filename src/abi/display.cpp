@@ -113,14 +113,10 @@ int display_height(int display) {
 
 // Draw the full area of a display.
 bool display_write(int display, const void *buf, size_t len) {
-	printf("%p\n", __builtin_return_address(0));
 	auto iter = displays.find(display);
 	if (iter != displays.end()) {
-		bool rv = iter->second(buf, len);
-		printf("%p\n", __builtin_return_address(0));
-		return rv;
+		return iter->second(buf, len);
 	}
-	printf("%p\n", __builtin_return_address(0));
 	return false;
 }
 // Draw a part of the display.
