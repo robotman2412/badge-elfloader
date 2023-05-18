@@ -26,8 +26,8 @@
 
 
 
-	# Address of default interrupt handler.
-	.global interruptHandler
+	# Address of default trap handler.
+	.global defaultTrapHandler
 	# ECALL handler function.
 	.global ecallHandler
 	# Trap handler function.
@@ -50,12 +50,13 @@ customTrap:
 	sw t1, ctx_scratch_0(t0)
 	
 	# Jump to handler.
-	.option arch, -c
+	.option push
+	.option norvc
 	auipc t1, 0
 	lw t1, 12(t1)
 	jr t1
 	.word customTrap0
-	.option arch, +c
+	.option pop
 
 	# Size of customTrap function.
 	.global customTrapSize
@@ -239,7 +240,7 @@ customTrap0:
 	csrs mstatus, t1
 	
 	# Forward ISR.
-	lw t1, interruptHandler
+	lw t1, defaultTrapHandler
 	jr t1
 #else
 	# Handle trap.
@@ -261,7 +262,7 @@ customTrap0:
 	csrs mstatus, t1
 	
 	# Forward ISR.
-	lw t1, interruptHandler
+	lw t1, defaultTrapHandler
 	jr t1
 #else
 	# Handle trap.
@@ -328,12 +329,12 @@ customTrap0:
 	csrs mstatus, t1
 	
 	# Restore tempregs.
-	lw t1, ctx_scratch_0(t0) # prev. t0 in t1
+	lw t1, ctx_scratch_0(t0) # prev. t0 in t1,  ctx in t0
 	csrw mscratch, t1        # prev. t0 in mscratch
 	lw t3, ctx_scratch_3(t0)
 	lw t2, ctx_scratch_2(t0)
 	lw t1, ctx_scratch_1(t0)
-	csrrw t0, mscratch, t0   # prev. to in t0,  ctx in mscratch
+	csrrw t0, mscratch, t0   # prev. t0 in t0,  ctx in mscratch
 	
 	# Return from trap.
 	mret

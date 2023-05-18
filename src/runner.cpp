@@ -23,6 +23,7 @@
 */
 
 #include "runner.hpp"
+#include "abi.hpp"
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -108,11 +109,11 @@ int runUserCode(bool &success, kernel::ctx_t &kctx, loader::Linkage &prog, abi::
 	
 	// Allocate user stack.
 	kctx.u_regs.sp = actx.map(CONFIG_BADGERT_STACK_DEPTH * sizeof(long));
-	kctx.u_regs.sp += CONFIG_BADGERT_STACK_DEPTH * sizeof(long);
 	if (!kctx.u_regs.sp) {
 		success = false;
 		return -1;
 	}
+	kctx.u_regs.sp += CONFIG_BADGERT_STACK_DEPTH * sizeof(long);
 	
 	// Measure envp.
 	// int envp_len;
@@ -132,7 +133,9 @@ int runUserCode(bool &success, kernel::ctx_t &kctx, loader::Linkage &prog, abi::
 	// memcpy(new_envp, envp, envp_len * sizeof(char*));
 	
 	// Set up usermode registers.
-	kctx.u_pc      = (long) prog.getEntryFunc();
+	kctx.u_abi_table = abi::getAbiTable();
+	kctx.u_abi_size  = abi::getAbiTableSize();
+	kctx.u_pc        = (long) prog.getEntryFunc();
 	// kctx.u_regs.a0 = argc;
 	// kctx.u_regs.a1 = (long) new_argv;
 	// kctx.u_regs.a2 = (long) new_envp;
@@ -140,7 +143,7 @@ int runUserCode(bool &success, kernel::ctx_t &kctx, loader::Linkage &prog, abi::
 	asm volatile ("mv %0, tp" : "=r" (kctx.u_regs.tp));
 	
 	// Run user program.
-	// kernel::setCtx(&kctx);
+	kernel::setCtx(&kctx);
 	asm volatile (
 		"  fence\n"		// Fence for user data
 		"  fence.i\n"	// Fence for user code
@@ -149,7 +152,6 @@ int runUserCode(bool &success, kernel::ctx_t &kctx, loader::Linkage &prog, abi::
 		:: "i" (kernel::SYS_USERJUMP)
 		: "a0", "memory"
 	);
-	printf("?????\n");
 	
 	// Return from this whole ordeal.
 	success = true;
@@ -169,7 +171,6 @@ static void taskCode(void *context) {
 	// Allocate a kernel context.
 	kernel::ctx_t kctx;
 	kctx.pid = actx.getPID();
-	kernel::setCtx(&kctx);
 	#endif
 	
 	// Collect user parameters.
@@ -222,7 +223,7 @@ static bool startPreloaded(loader::Linkage &&linkage, abi::Context &ctx, Callbac
 	
 	// Start task.
 	#ifdef CONFIG_BADGEABI_ENABLE_KERNEL
-	auto res = xTaskCreate(taskCode, "", 2048, ptr, 0, &handle);
+	auto res = xTaskCreate(taskCode, "", 4096, ptr, 0, &handle);
 	#else
 	auto res = xTaskCreate(taskCode, "", CONFIG_BADGERT_STACK_DEPTH, ptr, 0, &handle);
 	#endif

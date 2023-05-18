@@ -42,7 +42,7 @@ extern "C" const char abiCallTemplateEnd[];
 namespace abi {
 
 static elf::SymMap cache;
-#ifdef CONFIG_BADGEABI_ENABLE_MPU
+#ifdef CONFIG_BADGEABI_ENABLE_KERNEL
 static std::vector<fptr_t> abiTable;
 #endif
 static std::unordered_map<int, Context> contextMap;
@@ -104,7 +104,7 @@ Context::Context() {
 Context::~Context() {
 	ESP_LOGD(TAG, "~Context()");
 	for (auto mem: actual) {
-		free((void *) mem.base);
+		deallocator(mem);
 	}
 }
 
@@ -290,6 +290,7 @@ void deallocator(MemRange range) {
 
 
 
+#ifdef CONFIG_BADGEABI_ENABLE_KERNEL
 // Generates an ABI call wrapper function.
 static void *writeABIWrapper(int abiIndex) {
 	// Allocate an memories.
@@ -307,10 +308,11 @@ static void *writeABIWrapper(int abiIndex) {
 	// Done!
 	return mem;
 }
+#endif
 
 static void initCache() {
 	exportSymbolsUnwrapped(cache);
-	#ifdef CONFIG_BADGEABI_ENABLE_MPU
+	#ifdef CONFIG_BADGEABI_ENABLE_KERNEL
 	for (auto &entry: cache) {
 		auto fptr = entry.second;
 		entry.second = (size_t) writeABIWrapper(abiTable.size());
@@ -348,7 +350,9 @@ size_t getAbiTableSize() {
 // Exports ABI symbols into `map`.
 void exportSymbols(elf::SymMap &map) {
 	if (!cache.size()) initCache();
-	map.merge(cache);
+	for (auto &entry: cache) {
+		map[entry.first] = entry.second;
+	}
 }
 
 } // namespace abi

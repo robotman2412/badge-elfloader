@@ -71,11 +71,17 @@ extern "C" {
 // Interrupt vector table pointer.
 extern size_t interruptPointer;
 // Interrupt handler address.
-extern size_t interruptHandler;
+extern size_t defaultTrapHandler;
+// Interrupt vector table for forwarding.
+extern size_t interruptVectorTable[32];
 // ASM function: Trap handler.
 void customTrap();
 // Size of trap handler.
 extern const size_t customTrapSize;
+// ASM function: Interrupt handler.
+void customISR();
+// Size of interrupt handler.
+extern const size_t customISRSize;
 
 // ECALL handler.
 // Returns 1 to return to machine mode, 0 to return to user mode.

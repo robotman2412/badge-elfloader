@@ -19,5 +19,6 @@ add_library(kernel
 	src/abicall.S
 	src/abiwrapper.S
 	src/trap.S
+	src/interrupt.S
 	src/kernel.cpp
 )

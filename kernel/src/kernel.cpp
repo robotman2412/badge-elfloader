@@ -28,10 +28,12 @@
 
 
 
-// Interrupt vector table pointer.
+// Interrupt vector table pointer original value.
 size_t interruptPointer;
+// Interrupt vector table for forwarding.
+size_t interruptVectorTable[32];
 // Interrupt handler address.
-size_t interruptHandler;
+size_t defaultTrapHandler;
 
 
 
@@ -284,26 +286,51 @@ static inline uint32_t writeJAL(int32_t offset) {
 
 // Do all generic setup required for user mode.
 void init() {
+	// Disable interrupts.
+	asm volatile ("csrc mstatus, %0" :: "r" (0x8));
+	
 	// Obtain initial vector setting.
 	asm volatile ("csrr %0, mtvec" : "=r" (interruptPointer));
 	std::cout << "CSR mtvec:         0x" << std::hex << interruptPointer << '\n';
 	interruptPointer &= 0xfffffffc;
 	
-	// Read ISR address.
+	
+	// Read trap address.
 	uint32_t *instptr = (uint32_t *) interruptPointer;
-	std::cout << "Interrupt handler: 0x" << std::hex << *instptr << '\n';
-	interruptHandler = readJAL(*instptr) + interruptPointer;
-	std::cout << "Interrupt handler: 0x" << std::hex << interruptHandler << '\n';
+	defaultTrapHandler = readJAL(*instptr) + interruptPointer;
 	
 	// Copy customTrap to RAM.
 	void *mem = malloc(customTrapSize);
 	size_t offs = (size_t) mem - (size_t) &customTrap;
-	std::cout << "Loaded ISR to 0x" << std::hex << (size_t) mem << " (offset 0x" << offs << ")\n";
+	std::cout << "Loaded trap handler to 0x" << std::hex << (size_t) mem << " (offset 0x" << offs << ")\n";
 	memcpy(mem, (const void*) &customTrap, customTrapSize);
 	
-	// Write custom ISR address.
+	// Write custom trap address.
 	size_t isrptr = (size_t) mem;
 	*instptr = writeJAL(isrptr - interruptPointer);
+	
+	
+	// Copy customISR to RAM.
+	mem = malloc(customISRSize);
+	offs = (size_t) mem - (size_t) &customISR;
+	std::cout << "Loaded interrupt handler to 0x" << std::hex << (size_t) mem << " (offset 0x" << offs << ")\n";
+	memcpy(mem, (const void*) &customISR, customISRSize);
+	
+	// Read complete interrupt vector table.
+	for (size_t i = 0; i < 32; i++) {
+		size_t addr = readJAL(instptr[i]) + (size_t) &instptr[i];
+		interruptVectorTable[i] = addr;
+	}
+	
+	// // Write interrupt vector table.
+	// for (size_t i = 1; i < 32; i++) {
+	// 	size_t val = writeJAL((size_t) mem - (size_t) &instptr[i]);
+	// 	instptr[i] = val;
+	// }
+	
+	
+	// Enable interrupts.
+	asm volatile ("csrs mstatus, %0" :: "r" (0x8));
 }
 
 // Set active context.
