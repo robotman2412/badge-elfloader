@@ -31,8 +31,6 @@ static const char *TAG = "badgeloader";
 #include <mpu.hpp>
 #endif
 
-#include <iostream>
-
 namespace loader {
 
 
@@ -96,7 +94,7 @@ bool Linkage::loadLibrary(const std::string &filename, FILE *fd) {
 	#ifdef CONFIG_BADGEABI_ENABLE_MPU
 	// Apply MPU settings.
 	if (!mpu::applyPH(elf, prog)) {
-		ESP_LOGW(TAG, "Applying MPU settings failed");
+		ESP_LOGW(TAG, "Applying MPU settings failed, ignoring.");
 	}
 	#endif
 	

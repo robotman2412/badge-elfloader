@@ -183,9 +183,9 @@ static void taskCode(void *context) {
 	bool success;
 	int ec = runUserCode(success, kctx, prog, actx, argc, argv, envp);
 	if (success) {
-		printf("Process %d exited with code %d\n", kctx.pid, ec);
+		ESP_LOGI(TAG, "Process %d exited with code %d\n", kctx.pid, ec);
 	} else {
-		printf("Unable to run process %d\n", kctx.pid);
+		ESP_LOGE(TAG, "Unable to run process %d\n", kctx.pid);
 	}
 	
 	kernel::setDefaultCtx();
@@ -195,10 +195,11 @@ static void taskCode(void *context) {
 	
 	// Run user code.
 	main_t entryFunc = (main_t) prog.getEntryFunc();
+	ESP_LOGI(TAG, "Starting process %d at entrypoint %p", actx.getPID(), entryFunc);
 	int ec = _badgert_jump_to_app(argc, (char**) argv, (char**) envp, entryFunc, &actx.exitPC, &actx.exitSP);
 	
 	// Report status.
-	printf("Process %d exited with code %d\n", actx.getPID(), ec);
+	ESP_LOGI(TAG, "Process %d exited with code %d\n", actx.getPID(), ec);
 	#endif
 	
 	// Free resources and exit.
